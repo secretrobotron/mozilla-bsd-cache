@@ -1,0 +1,93 @@
+<!doctype html>
+<html>
+  <head>
+    <style>
+      html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      #graph-container {
+        width: 100%;
+        height: 100%;
+        position: relative;
+      }
+
+      #graph-container .column {
+        height: 100%;
+        display: inline-block;
+        position: relative;
+      }
+
+      #graph-container .column .bar {
+        background: #000;
+        position: absolute;
+        bottom: 0;
+        left: 2%;
+        right: 2%;
+      }
+
+      #graph-container .column .bar .title {
+        position: absolute;
+        top: -3em;
+        width: 100%;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="graph-container">
+      <div class="column">
+        <div class="bar"><div class="title"></div></div>
+      </div>
+    </div>
+    <script>
+      (function() {
+        var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sept', 'Oct', 'Nov', 'Dec'];
+
+        function formatDate (date) {
+          return months[date.getMonth()] + ' ' + date.getDate();
+        }
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', 'https://s3.amazonaws.com/mozilla-bsd-cache/eoy.json', true);
+        xhr.onload = function () {
+          var bsdData = JSON.parse(xhr.responseText);
+
+          bsdData = bsdData.sort(function (a, b) {
+            if (a.month === b.month) {
+              return a.startDate > b.startDate ? 1 : (a.startDate < b.startDate ? -1 : 0)
+            }
+            else {
+              return a.month > b.month ? 1 : (a.month < b.month ? -1 : 0)
+            }
+          });
+
+          var graphContainer = document.querySelector('#graph-container');
+          var columnTemplate = document.querySelector('.column');
+          columnTemplate.parentNode.removeChild(columnTemplate);
+
+          var totalAmount = bsdData.reduce(function(acc, period) { return acc + period.data.amount; }, 0);
+
+          var runningTotal = 0;
+          bsdData.forEach(function (period) {
+            var column = columnTemplate.cloneNode(true);
+            column.style.width = 100 / bsdData.length + '%';
+            runningTotal += period.data.amount;
+            column.querySelector('.bar').style.height = ( 80 * runningTotal / totalAmount ) + '%';
+            var startDate = new Date(period.month + '/' + period.startDate + '/' + '2013');
+            var endDate = new Date(period.month + '/' + period.endDate + '/' + '2013');
+            column.querySelector('.title').appendChild(document.createTextNode(formatDate(startDate) + ' - ' + formatDate(endDate)));
+            column.querySelector('.title').appendChild(document.createElement('br'));
+            column.querySelector('.title').appendChild(document.createTextNode('$' + runningTotal));
+            graphContainer.appendChild(column);
+          });
+        };
+        xhr.overrideMimeType('text/json');
+        xhr.send();
+      })();
+    </script>
+  </body>
+</html>
