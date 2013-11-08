@@ -69,19 +69,22 @@
           var columnTemplate = document.querySelector('.column');
           columnTemplate.parentNode.removeChild(columnTemplate);
 
-          var totalAmount = bsdData.reduce(function(acc, period) { return acc + period.data.amount; }, 0);
+          var totalDollars = bsdData.reduce(function(acc, period) { return acc + period.data.amount; }, 0);
 
-          var runningTotal = 0;
+          var runningTotalDollars = 0;
+          var runningTotalContributors = 0;
+
           bsdData.forEach(function (period) {
             var column = columnTemplate.cloneNode(true);
             column.style.width = 100 / bsdData.length + '%';
-            runningTotal += period.data.amount;
-            column.querySelector('.bar').style.height = ( 80 * runningTotal / totalAmount ) + '%';
+            runningTotalDollars += period.data.amount;
+            runningTotalContributors += period.data.contributors;
+            column.querySelector('.bar').style.height = 80 * ( period.data.amount > 0 ? runningTotalDollars : 0 ) / totalDollars + '%';
             var startDate = new Date(period.month + '/' + period.startDate + '/' + '2013');
             var endDate = new Date(period.month + '/' + period.endDate + '/' + '2013');
             column.querySelector('.title').appendChild(document.createTextNode(formatDate(startDate) + ' - ' + formatDate(endDate)));
             column.querySelector('.title').appendChild(document.createElement('br'));
-            column.querySelector('.title').appendChild(document.createTextNode('$' + runningTotal));
+            column.querySelector('.title').appendChild(document.createTextNode('$' + runningTotalDollars + ' (' + runningTotalContributors + ')'));
             graphContainer.appendChild(column);
           });
         };
