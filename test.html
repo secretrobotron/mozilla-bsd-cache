@@ -9,19 +9,20 @@
         padding: 0;
       }
 
-      #graph-container {
-        width: 100%;
-        height: 100%;
+      #period-graph-container,
+      #source-graph-container {
+        width: 50%;
+        height: 45%;
         position: relative;
       }
 
-      #graph-container .column {
+      .column {
         height: 100%;
         display: inline-block;
         position: relative;
       }
 
-      #graph-container .column .bar {
+      .column .bar {
         background: #000;
         position: absolute;
         bottom: 0;
@@ -29,7 +30,7 @@
         right: 2%;
       }
 
-      #graph-container .column .bar .title {
+      .column .bar .title {
         position: absolute;
         top: -3em;
         width: 100%;
@@ -38,7 +39,12 @@
     </style>
   </head>
   <body>
-    <div id="graph-container">
+    <div id="period-graph-container">
+      <div class="column">
+        <div class="bar"><div class="title"></div></div>
+      </div>
+    </div>
+    <div id="source-graph-container">
       <div class="column">
         <div class="bar"><div class="title"></div></div>
       </div>
@@ -55,38 +61,63 @@
         xhr.open('GET', 'https://s3.amazonaws.com/mozilla-bsd-cache/eoy.json', true);
         xhr.onload = function () {
           var bsdData = JSON.parse(xhr.responseText);
+          var periodData = bsdData.period;
+          var sourceData = bsdData.source;
 
-          bsdData = bsdData.sort(function (a, b) {
-            if (a.month === b.month) {
-              return a.startDate > b.startDate ? 1 : (a.startDate < b.startDate ? -1 : 0)
-            }
-            else {
-              return a.month > b.month ? 1 : (a.month < b.month ? -1 : 0)
-            }
-          });
+          function createPeriodGraph () {
+            periodData = periodData.sort(function (a, b) {
+              if (a.month === b.month) {
+                return a.startDate > b.startDate ? 1 : (a.startDate < b.startDate ? -1 : 0)
+              }
+              else {
+                return a.month > b.month ? 1 : (a.month < b.month ? -1 : 0)
+              }
+            });
 
-          var graphContainer = document.querySelector('#graph-container');
-          var columnTemplate = document.querySelector('.column');
-          columnTemplate.parentNode.removeChild(columnTemplate);
+            var graphContainer = document.querySelector('#period-graph-container');
+            var columnTemplate = graphContainer.querySelector('.column');
+            columnTemplate.parentNode.removeChild(columnTemplate);
 
-          var totalDollars = bsdData.reduce(function(acc, period) { return acc + period.data.amount; }, 0);
+            var totalDollars = periodData.reduce(function(acc, period) { return acc + period.data.amount; }, 0);
 
-          var runningTotalDollars = 0;
-          var runningTotalContributors = 0;
+            var runningTotalDollars = 0;
+            var runningTotalContributors = 0;
 
-          bsdData.forEach(function (period) {
-            var column = columnTemplate.cloneNode(true);
-            column.style.width = 100 / bsdData.length + '%';
-            runningTotalDollars += period.data.amount;
-            runningTotalContributors += period.data.contributors;
-            column.querySelector('.bar').style.height = 80 * ( period.data.amount > 0 ? runningTotalDollars : 0 ) / totalDollars + '%';
-            var startDate = new Date(period.month + '/' + period.startDate + '/' + '2013');
-            var endDate = new Date(period.month + '/' + period.endDate + '/' + '2013');
-            column.querySelector('.title').appendChild(document.createTextNode(formatDate(startDate) + ' - ' + formatDate(endDate)));
-            column.querySelector('.title').appendChild(document.createElement('br'));
-            column.querySelector('.title').appendChild(document.createTextNode('$' + runningTotalDollars + ' (' + runningTotalContributors + ')'));
-            graphContainer.appendChild(column);
-          });
+            periodData.forEach(function (period) {
+              var column = columnTemplate.cloneNode(true);
+              column.style.width = 100 / periodData.length + '%';
+              runningTotalDollars += period.data.amount;
+              runningTotalContributors += period.data.contributors;
+              column.querySelector('.bar').style.height = 80 * ( period.data.amount > 0 ? runningTotalDollars : 0 ) / totalDollars + '%';
+              var startDate = new Date(period.month + '/' + period.startDate + '/' + '2013');
+              var endDate = new Date(period.month + '/' + period.endDate + '/' + '2013');
+              column.querySelector('.title').appendChild(document.createTextNode(formatDate(startDate) + ' - ' + formatDate(endDate)));
+              column.querySelector('.title').appendChild(document.createElement('br'));
+              column.querySelector('.title').appendChild(document.createTextNode('$' + runningTotalDollars + ' (' + runningTotalContributors + ')'));
+              graphContainer.appendChild(column);
+            });
+          }
+
+          function createSourceGraph () {
+            var graphContainer = document.querySelector('#source-graph-container');
+            var columnTemplate = graphContainer.querySelector('.column');
+            columnTemplate.parentNode.removeChild(columnTemplate);
+
+            var totalContributions = sourceData.reduce(function(acc, source) { return acc + source.data.contributions; }, 0);
+
+            sourceData.forEach(function (source) {
+              var column = columnTemplate.cloneNode(true);
+              column.style.width = 100 / sourceData.length + '%';
+              column.querySelector('.bar').style.height = 80 * source.data.contributions / totalContributions + '%';
+              column.querySelector('.title').appendChild(document.createTextNode(source.name[0].toUpperCase() + source.name.substr(1)));
+              column.querySelector('.title').appendChild(document.createElement('br'));
+              column.querySelector('.title').appendChild(document.createTextNode(source.data.contributions + ' contributions from ' + source.data.contributors + ' contributors'));
+              graphContainer.appendChild(column);
+            });
+          }
+
+          createPeriodGraph();
+          createSourceGraph();
         };
         xhr.overrideMimeType('text/json');
         xhr.send();

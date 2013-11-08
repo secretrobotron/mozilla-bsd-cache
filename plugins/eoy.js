@@ -4,7 +4,7 @@
 
 var https = require('https');
 
-function getPeriodData (slug, callback) {
+function getCampaignData (slug, callback) {
   var httpsOptions = {
     hostname: 'sendto.mozilla.org',
     port: 443,
@@ -39,7 +39,27 @@ function getPeriodData (slug, callback) {
   req.end();
 }
 
-function getEOYData(callback) {
+function getSourceData (callback) {
+  var complete = 0;
+
+  var sources = [
+    {name: 'snippet'},
+    {name: 'other'}
+  ];
+
+  sources.forEach(function (source) {
+    var slug = 'eoy-' + source.name;
+
+    getCampaignData(slug, function (data) {
+      source.data = data;
+      if (++complete === sources.length) {
+        callback(sources);
+      }
+    });
+  });
+}
+
+function getPeriodData (callback) {
   var complete = 0;
 
   var periods =[
@@ -51,12 +71,18 @@ function getEOYData(callback) {
     {month: 12, startDate: 16, endDate: 31}
   ];
 
+  var sources = [
+    'snippet',
+    'other'
+  ];
+
   periods.forEach(function (period) {
     var slug = 'eoy-{month}_{startDate}-{month}_{endDate}';
     slug = slug.replace(/\{month\}/g, period.month);
     slug = slug.replace(/\{startDate\}/g, period.startDate);
     slug = slug.replace(/\{endDate\}/g, period.endDate);
-    getPeriodData(slug, function (data) {
+
+    getCampaignData(slug, function (data) {
       period.data = data;
       if (++complete === periods.length) {
         callback(periods);
@@ -67,14 +93,19 @@ function getEOYData(callback) {
 
 module.exports = function () {
   return function (callback) {
-    getEOYData(function (data) {
-      callback([
-        {
-          filename: 'eoy.json',
-          data: JSON.stringify(data),
-          contentType: 'text/json'
-        }
-      ]);
+    getPeriodData(function (periodData) {
+      getSourceData(function (sourceData) {
+        callback([
+          {
+            filename: 'eoy.json',
+            data: JSON.stringify({
+              period: periodData,
+              source: sourceData
+            }),
+            contentType: 'text/json'
+          }
+        ]);
+      });
     });
   };
 };
