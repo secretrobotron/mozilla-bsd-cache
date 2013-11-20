@@ -39,13 +39,10 @@ function getCampaignData (slug, callback) {
   req.end();
 }
 
-function getSourceData (callback) {
+function getSourceData (sources, callback) {
   var complete = 0;
 
-  var sources = [
-    {name: 'snippet'},
-    {name: 'other'}
-  ];
+  sources = sources.map(function (key) { return {name: key} });
 
   sources.forEach(function (source) {
     var slug = 'eoy-' + source.name;
@@ -71,11 +68,6 @@ function getPeriodData (callback) {
     {month: 12, startDate: 16, endDate: 31}
   ];
 
-  var sources = [
-    'snippet',
-    'other'
-  ];
-
   periods.forEach(function (period) {
     var slug = 'eoy-{month}_{startDate}-{month}_{endDate}';
     slug = slug.replace(/\{month\}/g, period.month);
@@ -91,10 +83,10 @@ function getPeriodData (callback) {
   });
 }
 
-module.exports = function () {
+module.exports = function (sourceList) {
   return function (callback) {
     getPeriodData(function (periodData) {
-      getSourceData(function (sourceData) {
+      getSourceData(sourceList, function (sourceData) {
         callback([
           {
             filename: 'eoy.json',
