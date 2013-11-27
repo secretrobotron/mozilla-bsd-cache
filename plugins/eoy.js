@@ -25,6 +25,7 @@ function getCampaignData (slug, callback) {
         parsed = JSON.parse(matchedData[1]);
       }
       catch (e) {
+        console.error('Couldn\'t parse data for ' + slug);
         console.error(e);
       }
 
@@ -42,10 +43,13 @@ function getCampaignData (slug, callback) {
 function getSourceData (sources, callback) {
   var complete = 0;
 
-  sources = sources.map(function (key) { return {name: key} });
+  sources = sources.map(function (key, index) {
+    var sections = key.split(':');
+    return {id: sections[0], name: sections[1]};
+  });
 
   sources.forEach(function (source) {
-    var slug = 'eoy-' + source.name;
+    var slug = 'eoy-' + source.id;
 
     getCampaignData(slug, function (data) {
       source.data = data;
@@ -56,17 +60,13 @@ function getSourceData (sources, callback) {
   });
 }
 
-function getPeriodData (callback) {
+function getPeriodData (periodList, callback) {
   var complete = 0;
 
-  var periods =[
-    {month: 10, startDate: 1, endDate: 15},
-    {month: 10, startDate: 16, endDate: 31},
-    {month: 11, startDate: 1, endDate: 15},
-    {month: 11, startDate: 16, endDate: 30},
-    {month: 12, startDate: 1, endDate: 15},
-    {month: 12, startDate: 16, endDate: 31}
-  ];
+  var periods = periodList.map(function (period) {
+    var sections = period.split(',');
+    return {month: sections[0], startDate: sections[1], endDate: sections[2]};
+  });
 
   periods.forEach(function (period) {
     var slug = 'eoy-{month}_{startDate}-{month}_{endDate}';
@@ -83,9 +83,9 @@ function getPeriodData (callback) {
   });
 }
 
-module.exports = function (sourceList) {
+module.exports = function (sourceList, periodList) {
   return function (callback) {
-    getPeriodData(function (periodData) {
+    getPeriodData(periodList, function (periodData) {
       getSourceData(sourceList, function (sourceData) {
         callback([
           {

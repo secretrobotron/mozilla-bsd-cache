@@ -13,7 +13,7 @@ var awsInfo = {
 var s3Client = s3.init(awsInfo.key, awsInfo.secret, awsInfo.bucket);
 
 var plugins = [
-  require('./plugins/eoy')(process.env.EOY_SOURCES.split(',')),
+  require('./plugins/eoy')(process.env.EOY_SOURCES.split('|'), process.env.EOY_PERIODS.split('|')),
   require('./plugins/yearly')()
 ];
 
