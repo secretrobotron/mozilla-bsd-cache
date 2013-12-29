@@ -35,6 +35,7 @@ function getCampaignData (slug, callback) {
 
   req.on('error', function (e) {
     console.error(e);
+    return '';
   });
 
   req.end();
