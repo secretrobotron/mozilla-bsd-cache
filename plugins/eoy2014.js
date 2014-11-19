@@ -56,7 +56,7 @@ module.exports = function () {
             currency: data.L_CURRENCYCODE0,
             timestamp: data.TIMESTAMP
           },
-          contentType: 'text/json'
+          contentType: 'application/json'
         }
       ]);
     });

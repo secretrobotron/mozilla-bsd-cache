@@ -17,7 +17,7 @@ module.exports = function () {
             {
               filename: 'yearly2014.json',
               data: JSON.stringify( tabletop.sheets("Data for F.M.O")["elements"] ),
-              contentType: 'application/json'
+              contentType: 'text/json'
             }
           ]);
         }
