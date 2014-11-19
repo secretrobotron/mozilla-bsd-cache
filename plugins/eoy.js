@@ -95,7 +95,7 @@ module.exports = function (sourceList, periodList) {
               period: periodData,
               source: sourceData
             }),
-            contentType: 'text/json'
+            contentType: 'application/json'
           }
         ]);
       });

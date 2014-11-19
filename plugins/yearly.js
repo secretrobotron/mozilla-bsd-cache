@@ -47,7 +47,7 @@ module.exports = function () {
         {
           filename: 'yearly.json',
           data: JSON.stringify(data),
-          contentType: 'text/json'
+          contentType: 'application/json'
         }
       ]);
     });
