@@ -12,13 +12,12 @@ function getPaypalBalance(callback) {
     method: 'GET'
   };
 
-  httpsOptions.path +=
-                      '?USER=' + process.env.PAYPAL_USER +
-                      '&PWD=' + process.env.PAYPAL_PWD +
-                      '&SIGNATURE=' + process.env.PAYPAL_SIGNATURE +
-                      '&METHOD=GetBalance' +
-                      '&RETURNALLCURRENCIES=0' +
-                      '&VERSION=119';
+  httpsOptions.path +=  '?USER=' + process.env.PAYPAL_USER +
+                        '&PWD=' + process.env.PAYPAL_PWD +
+                        '&SIGNATURE=' + process.env.PAYPAL_SIGNATURE +
+                        '&METHOD=GetBalance' +
+                        '&RETURNALLCURRENCIES=0' +
+                        '&VERSION=119';
   var accumulatedData = '';
 
   var req = https.request(httpsOptions, function (res) {
