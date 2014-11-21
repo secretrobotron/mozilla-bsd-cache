@@ -16,7 +16,7 @@ var plugins = [
   require('./plugins/eoy')(process.env.EOY_SOURCES.split('|'), process.env.EOY_PERIODS.split('|')),
   require('./plugins/yearly')(),
   require('./plugins/yearly2014')(),
-  require('./plugins/eoy2014')()
+  require('./plugins/eoy-paypal-2014')()
 ];
 
 function loopInstance (loopFinishedCallback) {
