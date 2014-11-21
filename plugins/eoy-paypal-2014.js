@@ -3,15 +3,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var https = require('https');
+var url = require('url');
 
-function getYearlyData (callback) {
+function getPaypalBalance(callback) {
   var httpsOptions = {
-    hostname: 'sendto.mozilla.org',
-    port: 443,
-    path: '/page/contribute_c/yearly/xml',
+    hostname: 'api-3t.paypal.com',
+    path: "/nvp",
     method: 'GET'
   };
 
+  httpsOptions.path +=  '?USER=' + process.env.PAYPAL_USER +
+                        '&PWD=' + process.env.PAYPAL_PWD +
+                        '&SIGNATURE=' + process.env.PAYPAL_SIGNATURE +
+                        '&METHOD=GetBalance' +
+                        '&RETURNALLCURRENCIES=0' +
+                        '&VERSION=119';
   var accumulatedData = '';
 
   var req = https.request(httpsOptions, function (res) {
@@ -20,15 +26,13 @@ function getYearlyData (callback) {
     });
     res.on('end', function (data) {
       var parsed;
-      var matchedData = accumulatedData.match(/<details>([^<]*)<\/details>/);
       try {
-        parsed = JSON.parse(matchedData[1]);
+        parsed = url.parse("?"+accumulatedData,true).query;
       }
       catch (e) {
         console.error(e);
       }
-
-      callback(parsed);
+      callback(parsed || {});
     });
   });
 
@@ -40,13 +44,18 @@ function getYearlyData (callback) {
   req.end();
 }
 
+
 module.exports = function () {
   return function (callback) {
-    getYearlyData(function (data) {
+    getPaypalBalance(function(data){
       callback([
         {
-          filename: 'yearly.json',
-          data: JSON.stringify(data),
+          filename: 'eoy-paypal-2014.json',
+          data: {
+            amount: data.L_AMT0,
+            currency: data.L_CURRENCYCODE0,
+            timestamp: data.TIMESTAMP
+          },
           contentType: 'application/json'
         }
       ]);
